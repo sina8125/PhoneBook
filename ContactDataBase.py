@@ -23,6 +23,8 @@ class ContactDataBase:
             cursor.close()
 
     def insert_contact(self, contact: Contact):
+        if not self.check_repeated_number(contact.phone_number):
+            raise ValueError("Phone number already exists")
         with sqlite3.connect(database_file,
                              detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as connection:
             cursor = connection.cursor()
@@ -53,3 +55,17 @@ class ContactDataBase:
                                         phone_number=row[3],
                                         created_time=row[4]))
         return contact_list if len(contact_list) > 0 else None
+
+    def check_repeated_number(self, phone_number: str) -> bool:
+        with sqlite3.connect(database_file,
+                             detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as connection:
+            cursor = connection.cursor()
+            select_query = f'''select count(*) from CONTACTDATA where phone_number = '{phone_number}';'''
+            print(select_query)
+            result = cursor.execute(select_query).fetchall()
+            connection.commit()
+            cursor.close()
+        print(result)
+        if result[0][0] == 0:
+            return True
+        return False
