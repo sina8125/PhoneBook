@@ -1,5 +1,6 @@
 from datetime import datetime
 import pytz
+from tzlocal import get_localzone
 
 
 class Contact(object):
@@ -8,7 +9,7 @@ class Contact(object):
                  first_name: str,
                  phone_number: str,
                  last_name: str = None,
-                 created_time: datetime = datetime.now(tz=pytz.timezone('Asia/Tehran')),
+                 created_time: datetime = datetime.now(tz=get_localzone()),
                  ):
         self.database_id = database_id
         self.first_name = first_name
@@ -78,5 +79,5 @@ class Contact(object):
 
     @created_time.setter
     def created_time(self, created_time: datetime) -> None:
-        created_time = created_time.astimezone(tz=pytz.timezone('Asia/Tehran'))
+        created_time = created_time.astimezone(tz=get_localzone())
         self.__created_time = created_time

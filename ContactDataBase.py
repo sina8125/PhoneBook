@@ -1,8 +1,6 @@
 import datetime
 import sqlite3
 
-import pytz
-
 from Contact import Contact
 
 database_file = "contacts.db"
