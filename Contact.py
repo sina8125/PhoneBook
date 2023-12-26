@@ -1,4 +1,5 @@
 from datetime import datetime
+import pytz
 
 
 class Contact(object):
@@ -6,14 +7,14 @@ class Contact(object):
                  database_id: int,
                  first_name: str,
                  phone_number: str,
-                 created_time: datetime,
-                 last_name: str = None
+                 last_name: str = None,
+                 created_time: datetime = datetime.now(tz=pytz.timezone('Asia/Tehran')),
                  ):
-        self.__database_id = database_id
-        self.__first_name = first_name
-        self.__last_name = last_name
-        self.__phone_number = phone_number
-        self.__created_time = created_time
+        self.database_id = database_id
+        self.first_name = first_name
+        self.last_name = last_name
+        self.phone_number = phone_number
+        self.created_time = created_time
 
     @property
     def database_id(self) -> int:
@@ -63,7 +64,7 @@ class Contact(object):
 
     @staticmethod
     def __check_number(number: str):
-        if number.isdecimal():
+        if not number.isdecimal():
             raise ValueError("number must only contain decimal numbers")
         elif len(number) > 11:
             raise ValueError("number is too long")
@@ -77,4 +78,5 @@ class Contact(object):
 
     @created_time.setter
     def created_time(self, created_time: datetime) -> None:
+        created_time = created_time.astimezone(tz=pytz.timezone('Asia/Tehran'))
         self.__created_time = created_time
