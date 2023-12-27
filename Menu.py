@@ -5,6 +5,8 @@ from rich.console import Console
 from rich.table import Table
 
 
+
+
 class Menu:
     def __init__(self, database: ContactDataBase):
         self.database = database
@@ -63,7 +65,46 @@ class Menu:
                 print('Try again!')
 
     def get_all_contacts(self):
-        pass
+        last_sort = [True, False, False, False]
+        contacts = self.database.read_contacts()
+        while True:
+            table = Table()
+            table.add_column(header='First Name', justify='center', style='green')
+            table.add_column(header='Last Name', justify='center', style='green')
+            table.add_column(header='Phone Number', justify='center', style='green')
+            table.add_column(header='created time', justify='center', style='green')
+            for i, contact in enumerate(contacts):
+                table.add_row(contact.first_name,
+                              contact.last_name or '',
+                              contact.phone_number,
+                              contact.created_time.strftime('%Y-%m-%d %H:%M:%S'))
+                if contacts[i - 1].first_name[0] != contact.first_name[0]:
+                    table.add_section()
+            console = Console()
+            console.print(table)
+            sort = int(input(dedent('''
+            sort by:
+            1- first name
+            2- last name
+            3- phone number
+            4- created time
+            5- exit
+            ''')))
+            match sort:
+                case 1:
+                    contacts.sort(key=lambda x: x.first_name, reverse=last_sort[sort - 1])
+                case 2:
+                    contacts.sort(key=lambda x: x.last_name or '', reverse=last_sort[sort - 1])
+                case 3:
+                    contacts.sort(key=lambda x: x.phone_number, reverse=last_sort[sort - 1])
+                case 4:
+                    contacts.sort(key=lambda x: x.created_time, reverse=last_sort[sort - 1])
+                case 5:
+                    return
+                case _:
+                    print('Undefined command, try again!')
+
+            last_sort[sort - 1] = not last_sort[sort - 1]
 
     def search(self):
         while True:
