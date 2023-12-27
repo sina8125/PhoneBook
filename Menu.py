@@ -91,19 +91,19 @@ class Menu:
             '''))
             match sort:
                 case '1':
-                    contacts.sort(key=lambda x: x.first_name, reverse=last_sort[sort - 1])
+                    contacts.sort(key=lambda x: x.first_name, reverse=last_sort[int(sort) - 1])
                 case '2':
-                    contacts.sort(key=lambda x: x.last_name or '', reverse=last_sort[sort - 1])
+                    contacts.sort(key=lambda x: x.last_name or '', reverse=last_sort[int(sort) - 1])
                 case '3':
-                    contacts.sort(key=lambda x: x.phone_number, reverse=last_sort[sort - 1])
+                    contacts.sort(key=lambda x: x.phone_number, reverse=last_sort[int(sort) - 1])
                 case '4':
-                    contacts.sort(key=lambda x: x.created_time, reverse=last_sort[sort - 1])
+                    contacts.sort(key=lambda x: x.created_time, reverse=last_sort[int(sort) - 1])
                 case '5':
                     return
                 case _:
                     print('Undefined command, try again!')
 
-            last_sort[sort - 1] = not last_sort[sort - 1]
+            last_sort[int(sort) - 1] = not last_sort[int(sort) - 1]
 
     def search(self):
         while True:
