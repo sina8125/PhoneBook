@@ -67,3 +67,13 @@ class ContactDataBase:
         if result[0][0] == 0:
             return True
         return False
+
+    def delete_contacts(self, contacts: list[Contact]) -> None:
+        with sqlite3.connect(database_file,
+                             detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as connection:
+            cursor = connection.cursor()
+            contacts_id = str([contact.database_id for contact in contacts])[1:-1]
+            delete_query = f'''DELETE FROM CONTACTDATA WHERE id IN ({contacts_id});'''
+            cursor.execute(delete_query)
+            connection.commit()
+            cursor.close()
