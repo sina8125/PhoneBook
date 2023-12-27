@@ -72,10 +72,6 @@ class Menu:
     def get_all_contacts(self):
         last_sort = [True, False, False, False]
         contacts = self.database.read_contacts()
-        columns = [Column(header='First Name', justify='center', style='green'),
-                   Column(header='Last Name', justify='center', style='green'),
-                   Column(header='Phone Number', justify='center', style='green'),
-                   Column(header='created time', justify='center', style='green')]
         while True:
             table = Table()
             table.add_column(header='First Name', justify='center', style='green')
