@@ -86,7 +86,7 @@ class ContactDataBase:
                 cursor.close()
                 result = []
                 for row in all:
-                    if search_input in row[1] + row[2]:
+                    if search_input.lower() in (row[1] + ' ' + row[2]).lower():
                         result.append(row)
 
         contact_list = []
