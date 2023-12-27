@@ -34,7 +34,7 @@ class ContactDataBase:
                 contact.last_name = contact.last_name.replace("'", "\'")
 
             insert_query = f'''INSERT INTO CONTACTDATA (first_name, last_name, phone_number)
-             VALUES (?,?,?)'''
+                         VALUES (?,?,?)'''
             cursor.execute(insert_query, (contact.first_name, contact.last_name, contact.phone_number))
             connection.commit()
             cursor.close()
@@ -67,6 +67,46 @@ class ContactDataBase:
         if result[0][0] == 0:
             return True
         return False
+
+    def search(self, search_input: str) -> list[Contact] or None:
+        with sqlite3.connect(database_file,
+                             detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as connection:
+            cursor = connection.cursor()
+            if search_input.isnumeric():
+                select_query = f'''SELECT * FROM CONTACTDATA WHERE phone_number like '%{search_input}%';'''
+                result = cursor.execute(select_query).fetchall()
+                connection.commit()
+                cursor.close()
+            else:
+                select_query = f'''SELECT * FROM CONTACTDATA;'''
+                all = cursor.execute(select_query).fetchall()
+                connection.commit()
+                cursor.close()
+                result = []
+                for row in all:
+                    if search_input.lower() in (row[1] + ' ' + row[2]).lower():
+                        result.append(row)
+
+        contact_list = []
+        for row in result:
+            contact_list.append(Contact(database_id=row[0],
+                                        first_name=row[1],
+                                        last_name=row[2],
+                                        phone_number=row[3],
+                                        created_time=row[4]))
+        return contact_list if len(contact_list) > 0 else None
+
+    def edit(self, contact: Contact):
+        with sqlite3.connect(database_file,
+                             detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as connection:
+            cursor = connection.cursor()
+            query = f'''UPDATE CONTACTDATA
+                               SET first_name = '{contact.first_name}', last_name = '{contact.last_name}',
+                                phone_number = '{contact.phone_number}' 
+                                WHERE id = {contact.database_id} ;'''
+            result = cursor.execute(query)
+            connection.commit()
+            cursor.close()
 
     def delete_contacts(self, contacts: list[Contact]) -> None:
         with sqlite3.connect(database_file,
