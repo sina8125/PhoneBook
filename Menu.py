@@ -1,3 +1,5 @@
+import copy
+import os
 import re
 from textwrap import dedent
 from Contact import Contact
@@ -16,35 +18,45 @@ class Menu:
         while True:
             command = input(dedent('''
             What do you want to do with you contacts?
+            0- Exit
             1- Add a new one
             2- See all of them
             3- Find, edit or delete
-            4- Exit
             '''))
             match command:
                 case '1':
-                    self.insert_contact_menu()
+                    if not self.insert_contact_menu():
+                        os.system('cls' if os.name == 'nt' else 'clear')
                 case '2':
                     self.get_all_contacts()
+                    os.system('cls' if os.name == 'nt' else 'clear')
                 case '3':
                     self.search()
-                case '4':
+                    os.system('cls' if os.name == 'nt' else 'clear')
+                case '0':
                     break
                 case _:
                     print('Undefined command, try again!')
 
     def insert_contact_menu(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
         while True:
             contact = Contact(-1, 'temp', '09123456789')
             while True:
                 try:
-                    contact.phone_number = input("Enter your contact's number : ")
+                    phone_number = input("Enter your contact's number (type # to back): ")
+                    if phone_number == '#':
+                        return False
+                    contact.phone_number = phone_number
                     break
                 except ValueError as e:
                     print(str(e))
             while True:
                 try:
-                    contact.first_name = input("Enter your contact's firstname : ")
+                    first_name = input("Enter your contact's firstname (type # to back): ")
+                    if phone_number == '#':
+                        return False
+                    contact.first_name = first_name
                     break
                 except ValueError as e:
                     print(str(e))
@@ -58,7 +70,7 @@ class Menu:
             try:
                 self.database.insert_contact(contact)
                 print('Successfully added!')
-                break
+                return True
             except ValueError as e:
                 print(str(e))
                 print('Try again!')
@@ -67,27 +79,30 @@ class Menu:
         last_sort = [True, False, False, False]
         contacts = self.database.read_contacts()
         while True:
+            os.system('cls' if os.name == 'nt' else 'clear')
             table = Table()
-            table.add_column(header='First Name', justify='center', style='green')
-            table.add_column(header='Last Name', justify='center', style='green')
-            table.add_column(header='Phone Number', justify='center', style='green')
-            table.add_column(header='created time', justify='center', style='green')
+            table.add_column(header='First Name', justify='center')
+            table.add_column(header='Last Name', justify='center')
+            table.add_column(header='Phone Number', justify='center')
+            table.add_column(header='created time', justify='center')
             for i, contact in enumerate(contacts):
+                if i > 0 and contacts[i - 1].first_name[0] != contact.first_name[0]:
+                    table.add_section()
+                style = '#33ccff' if i % 3 == 0 else ('#00ff40' if i % 3 == 1 else '#fe3939')
                 table.add_row(contact.first_name,
                               contact.last_name or '',
                               contact.phone_number,
-                              contact.created_time.strftime('%Y-%m-%d %H:%M:%S'))
-                if contacts[i - 1].first_name[0] != contact.first_name[0]:
-                    table.add_section()
+                              contact.created_time.strftime('%Y-%m-%d %H:%M:%S'), style=style)
+
             console = Console()
             console.print(table)
             sort = input(dedent('''
             sort by:
+            0 - Exit
             1- first name
             2- last name
             3- phone number
             4- created time
-            5- exit
             '''))
             match sort:
                 case '1':
@@ -98,92 +113,116 @@ class Menu:
                     contacts.sort(key=lambda x: x.phone_number, reverse=last_sort[int(sort) - 1])
                 case '4':
                     contacts.sort(key=lambda x: x.created_time, reverse=last_sort[int(sort) - 1])
-                case '5':
+                case '0':
                     return
                 case _:
                     print('Undefined command, try again!')
+                    continue
 
             last_sort[int(sort) - 1] = not last_sort[int(sort) - 1]
 
     def search(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
         while True:
             search_input = input(
-                'Enter part of name or phone number of the contact you want to find (or type \"return\" to get back): ')
-            if search_input == 'return':
+                'Enter part of name or phone number of the contact you want to find (or type \"#\" to get back): ')
+            if search_input == '#':
                 break
             res = self.database.search(search_input)
-            table = Table("Number", "First name", 'Last name', "Phone Number", "Date Added", title="Found Contacts: ")
-            if res is not None:
-                res = list(enumerate(res, start=1))
-                for contact in res:
-                    table.add_row(str(contact[0]),
-                                  contact[1].first_name,
-                                  contact[1].last_name if contact[1].last_name != 'None' else '',
-                                  contact[1].phone_number,
-                                  str(contact[1].created_time))
+            if self.search_menu(res):
+                return
+
+    def search_menu(self, res: list[Contact]):
+        os.system('cls' if os.name == 'nt' else 'clear')
+        while True:
+            if res:
+                table = Table(title="Found Contacts: ", caption_justify='center', title_justify='center')
+                table.add_column("Number", justify='center')
+                table.add_column("First name", justify='center')
+                table.add_column("Last name", justify='center')
+                table.add_column("Phone Number", justify='center')
+                table.add_column("Date Added", justify='center')
+                for i, contact in enumerate(res, start=1):
+                    style = '#33ccff' if (i - 1) % 3 == 0 else ('#00ff40' if (i - 1) % 3 == 1 else '#fe3939')
+                    table.add_row(str(i),
+                                  contact.first_name,
+                                  contact.last_name or '',
+                                  contact.phone_number,
+                                  contact.created_time.strftime('%Y-%m-%d %H:%M:%S'), style=style)
                 self.console.print(table)
-                break_outer_loop = False
-                while True:
-                    after_search_command = input(dedent('''
-                            What do you want to do with these found contacts?
-                            1- Edit one of them
-                            2- Delete
-                            3- Search again
-                            4- Do nothing and return
-                            '''))
-                    match after_search_command:
-                        case '1':
-                            while True:
-                                selected_contact_number = int(input('Enter number of the contact you want to edit: '))
-                                if 1 <= selected_contact_number <= len(res):
-                                    break
-                                else:
-                                    print('Enter a number that exists on the result table!')
-                            self.edit(res[selected_contact_number - 1][1])
-                        case '2':
-                            while True:
-                                delete_command = input(dedent('''
-                                                    Enter number of each contact you wish to delete:
-                                                    (if you want to delete all found contacts type and enter "*")
-                                                    (if you intend to delete multiple contacts, separate the numbers with space)
-                                                    '''))
-                                selected_contacts = []
-                                if re.match(r'^\d+( \d+)*$', delete_command):
-                                    selected_contacts_number = list(int(i) for i in delete_command.split())
-                                    for enumeratedRow in res:
-                                        if enumeratedRow[0] in selected_contacts_number:
-                                            selected_contacts.append(enumeratedRow[1])
-                                    self.delete(selected_contacts)
-                                    break_outer_loop = True
-                                    break
-                                elif delete_command == '*':
-                                    for enumeratedRow in res:
-                                        selected_contacts.append(enumeratedRow[1])
-                                    self.delete(selected_contacts)
-                                    break_outer_loop = True
-                                    break
-                                else:
-                                    print('Undefined command, try again!')
-                            if break_outer_loop:
-                                break
-                        case '3':
-                            break
-                        case '4':
-                            break_outer_loop = True
-                            break
-                        case _:
-                            print('Undefined command, try again!')
-                if break_outer_loop:
-                    break
             else:
-                print("Nothing found!")
-                continue
+                print('Nothing found!')
+                return False
+            after_search_command = input(dedent('''
+                    What do you want to do with these found contacts?
+                    0- Do nothing and return
+                    1- Edit one of them
+                    2- Delete
+                    3- Search again
+                    '''))
+            match after_search_command:
+                case '1':
+                    while True:
+                        if len(res) == 1:
+                            selected_contact_number = '1'
+                        else:
+                            selected_contact_number = input(
+                                'Enter number of the contact you want to edit: (type # to back)\n')
+                            if selected_contact_number == '#':
+                                break
+                        if selected_contact_number.isdecimal() and 1 <= int(selected_contact_number) <= len(res):
+                            self.edit(res[int(selected_contact_number) - 1])
+                            break
+                        else:
+                            print('Enter a number that exists on the result table!')
+                    os.system('cls' if os.name == 'nt' else 'clear')
+                case '2':
+                    self.delete_menu(res)
+                case '3':
+                    os.system('cls' if os.name == 'nt' else 'clear')
+                    return False
+                case '0':
+                    return True
+                case _:
+                    print('Undefined command, try again!')
+
+    def delete_menu(self, res: list[Contact]):
+        while True:
+            delete_command = input(dedent('''
+                                Enter number of each contact you wish to delete:
+                                (if you want to delete all found contacts type and enter "*")
+                                (if you intend to delete multiple contacts, separate the numbers with space)
+                                (type 0 to get back)
+                                '''))
+            selected_contacts = []
+            if delete_command == '0':
+                return
+            elif re.match(r'^\d+( \d+)*$', delete_command):
+                selected_contacts_number = [int(i) for i in delete_command.split()]
+                if any(not (1 <= i <= len(res)) for i in selected_contacts_number):
+                    print('Enter a number that exists on the result table!')
+                    continue
+                for i, contact in enumerate(res, start=1):
+                    if i in selected_contacts_number:
+                        selected_contacts.append(contact)
+                for contact in selected_contacts:
+                    res.remove(contact)
+                self.delete(selected_contacts)
+                return
+            elif delete_command == '*':
+                self.delete(res)
+                res.clear()
+                return
+            else:
+                print('Undefined command, try again!')
 
     def delete(self, contacts: list[Contact]):
         self.database.delete_contacts(contacts)
+        os.system('cls' if os.name == 'nt' else 'clear')
         print('Successfully deleted!')
 
     def edit(self, contact: Contact):
+        temp_contact = copy.deepcopy(contact)
         while True:
             edit_command = input(dedent('''
                 Which one of the fields do you wish to edit?:
@@ -197,26 +236,40 @@ class Menu:
                 case '1':
                     while True:
                         try:
-                            contact.first_name = input("Enter your contact's new first name : ")
+                            first_name = input("Enter your contact's new first name (type # to back): ")
+                            if '#' not in first_name:
+                                temp_contact.first_name = first_name
                             break
                         except ValueError as e:
                             print(str(e))
                 case '2':
                     while True:
                         try:
-                            contact.last_name = input("Enter your contact's new last name : ")
+                            last_name = input("Enter your contact's new last name (type # to back): ")
+                            if '#' not in last_name:
+                                if not last_name:
+                                    temp_contact.last_name = None
+                                else:
+                                    temp_contact.last_name = last_name
                             break
                         except ValueError as e:
                             print(str(e))
                 case '3':
                     while True:
                         try:
-                            contact.phone_number = input("Enter your contact's new phone number : ")
+                            phone_number = input("Enter your contact's new phone number (type # to back): ")
+                            if not self.database.check_repeated_number(phone_number):
+                                print('Phone number already exists')
+                                print('Try again!')
+                                continue
+                            if '#' not in phone_number:
+                                temp_contact.phone_number = phone_number
                             break
                         except ValueError as e:
                             print(str(e))
                 case '4':
-                    self.database.edit(contact)
+                    self.database.edit(temp_contact)
+                    contact.__dict__.update(temp_contact.__dict__)
                     break
                 case '5':
                     break

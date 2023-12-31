@@ -75,18 +75,12 @@ class ContactDataBase:
             if search_input.isnumeric():
                 select_query = f'''SELECT * FROM CONTACTDATA WHERE phone_number like '%{search_input}%';'''
                 result = cursor.execute(select_query).fetchall()
-                connection.commit()
-                cursor.close()
             else:
-                select_query = f'''SELECT * FROM CONTACTDATA;'''
-                all = cursor.execute(select_query).fetchall()
-                connection.commit()
-                cursor.close()
-                result = []
-                for row in all:
-                    if search_input.lower() in (row[1] + ' ' + row[2]).lower():
-                        result.append(row)
+                select_query = f'''SELECT * FROM CONTACTDATA WHERE (first_name || COALESCE((' ' || last_name),'')) like '%{search_input.lower()}%';'''
+                result = cursor.execute(select_query).fetchall()
 
+            connection.commit()
+            cursor.close()
         contact_list = []
         for row in result:
             contact_list.append(Contact(database_id=row[0],
@@ -94,19 +88,23 @@ class ContactDataBase:
                                         last_name=row[2],
                                         phone_number=row[3],
                                         created_time=row[4]))
-        return contact_list if len(contact_list) > 0 else None
+        return contact_list
 
     def edit(self, contact: Contact):
         with sqlite3.connect(database_file,
                              detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as connection:
-            cursor = connection.cursor()
-            query = f'''UPDATE CONTACTDATA
-                               SET first_name = '{contact.first_name}', last_name = '{contact.last_name}',
-                                phone_number = '{contact.phone_number}' 
-                                WHERE id = {contact.database_id} ;'''
-            result = cursor.execute(query)
-            connection.commit()
-            cursor.close()
+            try:
+                cursor = connection.cursor()
+                query = f'''UPDATE CONTACTDATA
+                                   SET first_name = ?, last_name = ?,
+                                    phone_number = ? 
+                                    WHERE id = ? ;'''
+                cursor.execute(query, (contact.first_name, contact.last_name, contact.phone_number, contact.database_id))
+                connection.commit()
+                cursor.close()
+            except sqlite3.IntegrityError as e:
+                if any('UNIQUE constraint failed' in arg for arg in e.args):
+                    raise ValueError("Phone number already exists")
 
     def delete_contacts(self, contacts: list[Contact]) -> None:
         with sqlite3.connect(database_file,
