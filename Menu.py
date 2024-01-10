@@ -22,7 +22,8 @@ class Menu:
             1- Add a new one
             2- See all of them
             3- Find, edit or delete
-            '''))
+            --------------------------------------
+            ''')).strip()
             match command:
                 case '1':
                     if not self.insert_contact_menu():
@@ -44,7 +45,7 @@ class Menu:
             contact = Contact(-1, 'temp', '09123456789')
             while True:
                 try:
-                    phone_number = input("Enter your contact's number (type # to back): ")
+                    phone_number = input("Enter your contact's number (type # to back): ").strip()
                     if phone_number == '#':
                         return False
                     contact.phone_number = phone_number
@@ -53,7 +54,7 @@ class Menu:
                     print(str(e))
             while True:
                 try:
-                    first_name = input("Enter your contact's firstname (type # to back): ")
+                    first_name = input("Enter your contact's firstname (type # to back): ").strip()
                     if phone_number == '#':
                         return False
                     contact.first_name = first_name
@@ -63,7 +64,7 @@ class Menu:
             while True:
                 try:
                     contact.last_name = input(
-                        "Enter your contact's lastname (This is optional, if you don't want to add this field just press enter) : ")
+                        "Enter your contact's lastname (This is optional, if you don't want to add this field just press enter) : ").strip()
                     break
                 except ValueError as e:
                     print(str(e))
@@ -103,7 +104,8 @@ class Menu:
             2- last name
             3- phone number
             4- created time
-            '''))
+            --------------------------------------
+            ''')).strip()
             match sort:
                 case '1':
                     contacts.sort(key=lambda x: x.first_name, reverse=last_sort[int(sort) - 1])
@@ -125,7 +127,7 @@ class Menu:
         os.system('cls' if os.name == 'nt' else 'clear')
         while True:
             search_input = input(
-                'Enter part of name or phone number of the contact you want to find (or type \"#\" to get back): ')
+                'Enter part of name or phone number of the contact you want to find (or type \"#\" to get back): ').strip()
             if search_input == '#':
                 break
             res = self.database.search(search_input)
@@ -159,7 +161,8 @@ class Menu:
                     1- Edit one of them
                     2- Delete
                     3- Search again
-                    '''))
+                    --------------------------------------
+                    ''')).strip()
             match after_search_command:
                 case '1':
                     while True:
@@ -167,7 +170,7 @@ class Menu:
                             selected_contact_number = '1'
                         else:
                             selected_contact_number = input(
-                                'Enter number of the contact you want to edit: (type # to back)\n')
+                                'Enter number of the contact you want to edit: (type # to back)\n').strip()
                             if selected_contact_number == '#':
                                 break
                         if selected_contact_number.isdecimal() and 1 <= int(selected_contact_number) <= len(res):
@@ -193,7 +196,8 @@ class Menu:
                                 (if you want to delete all found contacts type and enter "*")
                                 (if you intend to delete multiple contacts, separate the numbers with space)
                                 (type 0 to get back)
-                                '''))
+                                --------------------------------------
+                                ''')).strip()
             selected_contacts = []
             if delete_command == '0':
                 return
@@ -231,12 +235,13 @@ class Menu:
                 3- Phone Number
                 4- Save and get back
                 5- Discard the changes and get back
-                '''))
+                ----------------------------------------
+                ''')).strip()
             match edit_command:
                 case '1':
                     while True:
                         try:
-                            first_name = input("Enter your contact's new first name (type # to back): ")
+                            first_name = input("Enter your contact's new first name (type # to back): ").strip()
                             if '#' not in first_name:
                                 temp_contact.first_name = first_name
                             break
@@ -245,7 +250,7 @@ class Menu:
                 case '2':
                     while True:
                         try:
-                            last_name = input("Enter your contact's new last name (type # to back): ")
+                            last_name = input("Enter your contact's new last name (type # to back): ").strip()
                             if '#' not in last_name:
                                 if not last_name:
                                     temp_contact.last_name = None
@@ -257,7 +262,7 @@ class Menu:
                 case '3':
                     while True:
                         try:
-                            phone_number = input("Enter your contact's new phone number (type # to back): ")
+                            phone_number = input("Enter your contact's new phone number (type # to back): ").strip()
                             if not self.database.check_repeated_number(phone_number):
                                 print('Phone number already exists')
                                 print('Try again!')
